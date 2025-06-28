@@ -3,6 +3,7 @@ import API_CONFIG from '../config/api';
 
 function RoomDashboard({ currentUser, onJoinRoom, onLogout }) {
   const [rooms, setRooms] = useState([]);
+  const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createForm, setCreateForm] = useState({
@@ -21,6 +22,7 @@ function RoomDashboard({ currentUser, onJoinRoom, onLogout }) {
 
   useEffect(() => {
     fetchMyRooms();
+    fetchInvitations();
   }, []);
 
   const fetchMyRooms = async () => {
@@ -45,6 +47,25 @@ function RoomDashboard({ currentUser, onJoinRoom, onLogout }) {
       setError('Failed to fetch rooms');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchInvitations = async () => {
+    try {
+      const token = localStorage.getItem('uchat_token');
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.INVITATIONS}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setInvitations(data.invitations);
+      }
+    } catch (error) {
+      console.error('Fetch invitations error:', error);
     }
   };
 
@@ -115,15 +136,16 @@ function RoomDashboard({ currentUser, onJoinRoom, onLogout }) {
     }
   };
 
-  const handleAcceptInvite = async () => {
-    if (!inviteCode.trim()) {
+  const handleAcceptInvite = async (code = null) => {
+    const codeToUse = code || inviteCode;
+    if (!codeToUse.trim()) {
       setError('Please enter an invite code');
       return;
     }
 
     try {
       const token = localStorage.getItem('uchat_token');
-      const url = API_CONFIG.ENDPOINTS.ACCEPT_INVITE.replace(':inviteCode', inviteCode.trim());
+      const url = API_CONFIG.ENDPOINTS.ACCEPT_INVITE.replace(':inviteCode', codeToUse.trim());
       
       const response = await fetch(`${API_CONFIG.BASE_URL}${url}`, {
         method: 'POST',
@@ -138,6 +160,7 @@ function RoomDashboard({ currentUser, onJoinRoom, onLogout }) {
         setSuccess('Invitation accepted successfully!');
         setInviteCode('');
         fetchMyRooms();
+        fetchInvitations();
       } else {
         setError(data.error || 'Failed to accept invitation');
       }
@@ -223,6 +246,62 @@ function RoomDashboard({ currentUser, onJoinRoom, onLogout }) {
               </div>
             </div>
           </div>
+
+          {/* Pending Invitations */}
+          {invitations.length > 0 && (
+            <div className="mt-5">
+              <h4>
+                <i className="bi bi-envelope me-2"></i>
+                Pending Invitations
+                <span className="badge bg-warning text-dark ms-2">{invitations.length}</span>
+              </h4>
+              <div className="row">
+                {invitations.map(invitation => (
+                  <div key={invitation.id} className="col-md-6 col-lg-4 mb-3">
+                    <div className="card border-warning">
+                      <div className="card-body">
+                        <h6 className="card-title">{invitation.room.name}</h6>
+                        {invitation.room.description && (
+                          <p className="card-text text-muted small">{invitation.room.description}</p>
+                        )}
+                        <div className="mb-2">
+                          <small className="text-muted">
+                            <i className="bi bi-person me-1"></i>
+                            Invited by: {invitation.invitedBy.name}
+                          </small>
+                        </div>
+                        <div className="mb-3">
+                          <small className="text-muted d-block">
+                            <i className="bi bi-clock me-1"></i>
+                            Expires: {new Date(invitation.expiresAt).toLocaleDateString()}
+                          </small>
+                        </div>
+                        <div className="d-grid gap-2">
+                          <button
+                            className="btn btn-warning"
+                            onClick={() => handleAcceptInvite(invitation.inviteCode)}
+                          >
+                            <i className="bi bi-check-circle me-1"></i>
+                            Accept Invitation
+                          </button>
+                          <button
+                            className="btn btn-outline-secondary btn-sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(invitation.inviteCode);
+                              setSuccess('Invite code copied to clipboard!');
+                            }}
+                          >
+                            <i className="bi bi-clipboard me-1"></i>
+                            Copy Code: {invitation.inviteCode}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* My Rooms */}
           <div className="mt-5">

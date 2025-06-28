@@ -387,4 +387,49 @@ router.get('/:roomId/messages', auth, async (req, res) => {
   }
 });
 
+// Get user's pending invitations
+router.get('/invitations', auth, async (req, res) => {
+  try {
+    const rooms = await Room.find({
+      'invitations.invitedUser': req.user._id,
+      'invitations.status': 'pending',
+      'invitations.expiresAt': { $gt: new Date() },
+      isActive: true
+    })
+    .populate('creator', 'name avatar color')
+    .populate('invitations.invitedBy', 'name avatar color');
+
+    const invitations = [];
+    rooms.forEach(room => {
+      room.invitations.forEach(inv => {
+        if (inv.invitedUser.toString() === req.user._id.toString() && 
+            inv.status === 'pending' && 
+            inv.expiresAt > new Date()) {
+          invitations.push({
+            id: inv._id,
+            inviteCode: inv.inviteCode,
+            room: {
+              id: room._id,
+              name: room.name,
+              description: room.description,
+              creator: room.creator
+            },
+            invitedBy: inv.invitedBy,
+            createdAt: inv.createdAt,
+            expiresAt: inv.expiresAt
+          });
+        }
+      });
+    });
+
+    res.json({
+      success: true,
+      invitations
+    });
+  } catch (error) {
+    console.error('Get invitations error:', error);
+    res.status(500).json({ error: 'Failed to fetch invitations' });
+  }
+});
+
 module.exports = router;

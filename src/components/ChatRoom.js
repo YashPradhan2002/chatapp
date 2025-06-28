@@ -12,6 +12,7 @@ const ChatRoom = ({ socket, currentUser, currentRoom, onLogout, onLeaveRoom, isC
   const [showUserList, setShowUserList] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteUsername, setInviteUsername] = useState('');
+  const [inviteResult, setInviteResult] = useState(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const messagesEndRef = useRef(null);
@@ -20,10 +21,12 @@ const ChatRoom = ({ socket, currentUser, currentRoom, onLogout, onLeaveRoom, isC
   useEffect(() => {
     // Socket event listeners for room-based chat
     socket.on(SOCKET_EVENTS.ROOM_JOINED, (data) => {
-      setMessages(data.messages);
+      console.log('🏠 Room joined event received:', data);
+      setMessages(data.messages || []);
     });
 
     socket.on(SOCKET_EVENTS.NEW_MESSAGE, (message) => {
+      console.log('💬 New message received:', message);
       setMessages(prev => [...prev, message]);
     });
 
@@ -74,6 +77,15 @@ const ChatRoom = ({ socket, currentUser, currentRoom, onLogout, onLeaveRoom, isC
       socket.off(SOCKET_EVENTS.USER_LEFT);
     };
   }, [socket]);
+
+  useEffect(() => {
+    // Clear messages when room changes
+    if (currentRoom) {
+      setMessages([]);
+      setOnlineUsers([]);
+      setTypingUsers([]);
+    }
+  }, [currentRoom?.id]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive, but only if user is near bottom
@@ -143,15 +155,24 @@ const ChatRoom = ({ socket, currentUser, currentRoom, onLogout, onLeaveRoom, isC
 
       const data = await response.json();
       if (data.success) {
-        alert(`Invitation sent to ${inviteUsername}!\nInvite code: ${data.inviteCode}`);
+        setInviteResult({
+          success: true,
+          username: inviteUsername.trim(),
+          inviteCode: data.inviteCode
+        });
         setInviteUsername('');
-        setShowInviteModal(false);
       } else {
-        alert(data.error || 'Failed to send invitation');
+        setInviteResult({
+          success: false,
+          error: data.error || 'Failed to send invitation'
+        });
       }
     } catch (error) {
       console.error('Invite error:', error);
-      alert('Failed to send invitation');
+      setInviteResult({
+        success: false,
+        error: 'Failed to send invitation'
+      });
     }
   };
 
@@ -337,43 +358,112 @@ const ChatRoom = ({ socket, currentUser, currentRoom, onLogout, onLeaveRoom, isC
                 ></button>
               </div>
               <div className="modal-body">
-                <p className="text-muted mb-3">
-                  Enter the username of the person you want to invite to this room.
-                </p>
-                <div className="mb-3">
-                  <label className="form-label">Username</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={inviteUsername}
-                    onChange={(e) => setInviteUsername(e.target.value)}
-                    placeholder="Enter username"
-                    onKeyPress={(e) => e.key === 'Enter' && handleInviteUser()}
-                    autoFocus
-                  />
-                </div>
-                <div className="alert alert-info small">
-                  <i className="bi bi-info-circle me-1"></i>
-                  The invited user will receive an invite code to join this room.
-                </div>
+                {!inviteResult ? (
+                  <>
+                    <p className="text-muted mb-3">
+                      Enter the username of the person you want to invite to this room.
+                    </p>
+                    <div className="mb-3">
+                      <label className="form-label">Username</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={inviteUsername}
+                        onChange={(e) => setInviteUsername(e.target.value)}
+                        placeholder="Enter username"
+                        onKeyPress={(e) => e.key === 'Enter' && handleInviteUser()}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="alert alert-info small">
+                      <i className="bi bi-info-circle me-1"></i>
+                      The invited user will receive an invite code to join this room.
+                    </div>
+                  </>
+                ) : inviteResult.success ? (
+                  <div className="text-center">
+                    <div className="alert alert-success">
+                      <i className="bi bi-check-circle-fill me-2"></i>
+                      Invitation sent to <strong>{inviteResult.username}</strong>!
+                    </div>
+                    <div className="card bg-light">
+                      <div className="card-body">
+                        <h6 className="card-title">Invite Code:</h6>
+                        <div className="input-group">
+                          <input
+                            type="text"
+                            className="form-control text-center fw-bold"
+                            value={inviteResult.inviteCode}
+                            readOnly
+                          />
+                          <button
+                            className="btn btn-outline-primary"
+                            onClick={() => {
+                              navigator.clipboard.writeText(inviteResult.inviteCode);
+                              alert('Invite code copied to clipboard!');
+                            }}
+                          >
+                            <i className="bi bi-clipboard"></i>
+                          </button>
+                        </div>
+                        <small className="text-muted mt-2 d-block">
+                          Share this code with {inviteResult.username} to join the room.
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="alert alert-danger">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    {inviteResult.error}
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={() => setShowInviteModal(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary"
-                  onClick={handleInviteUser}
-                  disabled={!inviteUsername.trim()}
-                >
-                  <i className="bi bi-send me-1"></i>
-                  Send Invitation
-                </button>
+                {!inviteResult ? (
+                  <>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      onClick={() => setShowInviteModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-primary"
+                      onClick={handleInviteUser}
+                      disabled={!inviteUsername.trim()}
+                    >
+                      <i className="bi bi-send me-1"></i>
+                      Send Invitation
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary"
+                      onClick={() => {
+                        setInviteResult(null);
+                        setInviteUsername('');
+                      }}
+                    >
+                      Send Another
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-primary" 
+                      onClick={() => {
+                        setShowInviteModal(false);
+                        setInviteResult(null);
+                        setInviteUsername('');
+                      }}
+                    >
+                      Done
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

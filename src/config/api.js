@@ -17,7 +17,8 @@ const API_CONFIG = {
     JOIN_ROOM: '/api/rooms/:roomId/join',
     INVITE_USER: '/api/rooms/:roomId/invite',
     ACCEPT_INVITE: '/api/rooms/accept-invite/:inviteCode',
-    ROOM_MESSAGES: '/api/rooms/:roomId/messages'
+    ROOM_MESSAGES: '/api/rooms/:roomId/messages',
+    INVITATIONS: '/api/rooms/invitations'
   },
   
   // Session Configuration
