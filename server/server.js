@@ -169,7 +169,12 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
       });
 
       socket.emit(SOCKET_EVENTS.ROOM_JOINED, {
-        user: socket.user,
+        user: {
+          id: socket.user._id.toString(),
+          name: socket.user.name,
+          avatar: socket.user.avatar,
+          color: socket.user.color
+        },
         room: {
           id: room._id,
           name: room.name,
@@ -179,14 +184,24 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
       });
       
       // Notify other users in the room
-      socket.to(roomId).emit(SOCKET_EVENTS.USER_JOINED, socket.user);
+      socket.to(roomId).emit(SOCKET_EVENTS.USER_JOINED, {
+        id: socket.user._id.toString(),
+        name: socket.user.name,
+        avatar: socket.user.avatar,
+        color: socket.user.color
+      });
       
       // Send current online users for this room
       const roomSocketIds = roomConnections.get(roomId) || new Set();
       const onlineUsers = Array.from(roomSocketIds)
         .map(socketId => activeUsers.get(socketId))
         .filter(conn => conn)
-        .map(conn => conn.user);
+        .map(conn => ({
+          id: conn.user._id.toString(),
+          name: conn.user.name,
+          avatar: conn.user.avatar,
+          color: conn.user.color
+        }));
       
       console.log('📋 Sending online users list for room:', room.name, onlineUsers.map(u => u.name));
       io.to(roomId).emit(SOCKET_EVENTS.ONLINE_USERS, onlineUsers);

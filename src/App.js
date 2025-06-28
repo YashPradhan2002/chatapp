@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import LoginScreen from './components/LoginScreen';
 import ChatRoom from './components/ChatRoom';
 import RoomDashboard from './components/RoomDashboard';
-import { getSocketUrl, getSessionTimeout, getMaxSessionDuration, getStorageKey } from './config/api';
+import { getSocketUrl, getSessionTimeout, getMaxSessionDuration, getStorageKey, getApiUrl } from './config/api';
 import { SOCKET_EVENTS, ACTIVITY_EVENTS, ERROR_MESSAGES, UI_CONSTANTS } from './config/constants';
 import './App.css';
 
@@ -313,13 +313,39 @@ function App() {
   // Handle joining a room
   const handleJoinRoom = async (roomId) => {
     try {
-      // For now, we'll create a simple room object
-      // In a full implementation, you'd fetch room details from the API
-      setCurrentRoom({ 
-        id: roomId, 
-        name: 'Loading...', 
-        description: '' 
+      // Fetch room details before joining
+      const token = localStorage.getItem('uchat_token');
+      const response = await fetch(`${getApiUrl('MY_ROOMS')}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      const data = await response.json();
+      if (data.success) {
+        const room = data.rooms.find(r => r.id === roomId);
+        if (room) {
+          setCurrentRoom({
+            id: room.id,
+            name: room.name,
+            description: room.description
+          });
+        } else {
+          setCurrentRoom({ 
+            id: roomId, 
+            name: 'Room', 
+            description: '' 
+          });
+        }
+      } else {
+        setCurrentRoom({ 
+          id: roomId, 
+          name: 'Room', 
+          description: '' 
+        });
+      }
+      
       setAppState('room');
       
       // Connect socket and join room

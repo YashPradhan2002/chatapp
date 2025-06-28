@@ -7,7 +7,8 @@ const MessageList = ({ messages, currentUser, typingUsers, onlineUsers }) => {
   };
 
   const isCurrentUser = (message) => {
-    return message.user.id === currentUser.id;
+    // Both currentUser and message.user should now have consistent 'id' fields
+    return message.user.id === (currentUser.id || currentUser._id);
   };
 
   const getTypingUsersNames = () => {
