@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { register } from '../config/apiUtils';
-import { ERROR_MESSAGES } from '../config/constants';
 
 const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
@@ -78,9 +77,7 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
     <div className="card shadow-lg border-0">
       <div className="card-body p-5">
         <div className="text-center mb-4">
-          <i className="bi bi-person-plus-fill text-primary display-3"></i>
-          <h2 className="h3 mb-3 fw-bold text-primary">Create Account</h2>
-          <p className="text-muted">Join Uchat and start chatting</p>
+          <h2 className="h3 mb-3 fw-bold text-primary">Join Uchat</h2>
         </div>
         
         {error && (
@@ -94,7 +91,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
           <div className="row">
             <div className="col-md-6 mb-3">
               <label htmlFor="name" className="form-label">
-                <i className="bi bi-person me-1"></i>
                 Full Name
               </label>
               <input
@@ -112,7 +108,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
             
             <div className="col-md-6 mb-3">
               <label htmlFor="username" className="form-label">
-                <i className="bi bi-at me-1"></i>
                 Username
               </label>
               <input
@@ -131,7 +126,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
           
           <div className="mb-3">
             <label htmlFor="email" className="form-label">
-              <i className="bi bi-envelope me-1"></i>
               Email Address
             </label>
             <input
@@ -150,7 +144,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
           <div className="row">
             <div className="col-md-6 mb-3">
               <label htmlFor="password" className="form-label">
-                <i className="bi bi-lock me-1"></i>
                 Password
               </label>
               <input
@@ -168,7 +161,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
             
             <div className="col-md-6 mb-3">
               <label htmlFor="confirmPassword" className="form-label">
-                <i className="bi bi-lock-fill me-1"></i>
                 Confirm Password
               </label>
               <input
@@ -188,7 +180,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
           {/* Avatar Selection */}
           <div className="mb-3">
             <label className="form-label">
-              <i className="bi bi-image me-1"></i>
               Choose Avatar
             </label>
             <div className="row g-2">
@@ -215,8 +206,7 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
           {/* Color Selection */}
           <div className="mb-4">
             <label className="form-label">
-              <i className="bi bi-palette me-1"></i>
-              Choose Color Theme
+              Color Theme
             </label>
             <div className="d-flex gap-2 flex-wrap">
               {colorOptions.map((color, index) => (
@@ -259,7 +249,6 @@ const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
         </form>
         
         <div className="text-center">
-          <p className="text-muted mb-2">Already have an account?</p>
           <button 
             className="btn btn-outline-primary"
             onClick={onSwitchToLogin}

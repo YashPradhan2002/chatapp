@@ -55,7 +55,10 @@ export const ERROR_MESSAGES = {
   CONNECTION_FAILED: 'Failed to connect to server. Please try again.',
   FETCH_PROFILES_FAILED: 'Failed to load user profiles. Please refresh the page.',
   LOGIN_FAILED: 'Login failed. Please check your credentials.',
-  SEND_MESSAGE_FAILED: 'Failed to send message. Please try again.'
+  SEND_MESSAGE_FAILED: 'Failed to send message. Please try again.',
+  ROOM_ACCESS_DENIED: 'Access denied to this room. You may need to enter the room password.',
+  ROOM_NOT_FOUND: 'Room not found or no longer exists.',
+  INVALID_INVITE_CODE: 'Invalid or expired invitation code.'
 };
 
 // Success Messages

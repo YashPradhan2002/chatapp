@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import LoginScreen from './components/LoginScreen';
 import ChatRoom from './components/ChatRoom';
-import API_CONFIG, { getSocketUrl, getSessionTimeout, getMaxSessionDuration, getStorageKey } from './config/api';
+import RoomDashboard from './components/RoomDashboard';
+import { getSocketUrl, getSessionTimeout, getMaxSessionDuration, getStorageKey } from './config/api';
 import { SOCKET_EVENTS, ACTIVITY_EVENTS, ERROR_MESSAGES, UI_CONSTANTS } from './config/constants';
 import './App.css';
 
@@ -22,10 +23,12 @@ const SESSION_START_KEY = getStorageKey('SESSION_START');
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [currentRoom, setCurrentRoom] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
   const [authToken, setAuthToken] = useState(null);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [appState, setAppState] = useState('login'); // 'login', 'dashboard', 'room'
   const sessionTimeoutRef = useRef(null);
   const maxSessionTimeoutRef = useRef(null);
   const warningTimeoutRef = useRef(null);
@@ -56,11 +59,19 @@ function App() {
       console.error('❌ Socket error:', error);
     });
 
+    // Listen for room joined event to update room info
+    socket.on(SOCKET_EVENTS.ROOM_JOINED, (data) => {
+      if (data.room) {
+        setCurrentRoom(data.room);
+      }
+    });
+
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.DISCONNECT);
       socket.off('connect_error');
       socket.off('error');
+      socket.off(SOCKET_EVENTS.ROOM_JOINED);
     };
   }, []);
 
@@ -107,17 +118,10 @@ function App() {
         setCurrentUser(sessionData);
         setAuthToken(savedToken);
         setSessionStartTime(sessionStartTime);
+        setAppState('dashboard'); // Go to dashboard instead of auto-joining
         
-        // Update socket auth and join
+        // Update socket auth but don't auto-join any room
         socket.auth = { token: savedToken };
-        if (socket.connected) {
-          socket.emit(SOCKET_EVENTS.JOIN);
-        } else {
-          socket.connect();
-          socket.once(SOCKET_EVENTS.CONNECT, () => {
-            socket.emit(SOCKET_EVENTS.JOIN);
-          });
-        }
       }
     }
   };
@@ -277,6 +281,7 @@ function App() {
     setCurrentUser(user);
     setAuthToken(token);
     setSessionStartTime(currentTime);
+    setAppState('dashboard'); // Go to dashboard after login
     
     // Save session data
     localStorage.setItem(SESSION_KEY, JSON.stringify(user));
@@ -284,16 +289,8 @@ function App() {
     localStorage.setItem(LAST_ACTIVITY_KEY, currentTime.toString());
     localStorage.setItem(SESSION_START_KEY, currentTime.toString());
     
-    // Update socket auth and join
+    // Update socket auth but don't auto-join any room
     socket.auth = { token };
-    if (socket.connected) {
-      socket.emit(SOCKET_EVENTS.JOIN);
-    } else {
-      socket.connect();
-      socket.once(SOCKET_EVENTS.CONNECT, () => {
-        socket.emit(SOCKET_EVENTS.JOIN);
-      });
-    }
   };
 
   // Handle logout
@@ -304,11 +301,45 @@ function App() {
     removeActivityListeners();
     removeVisibilityChangeListener();
     setCurrentUser(null);
+    setCurrentRoom(null);
     setAuthToken(null);
     setSessionStartTime(null);
     setShowTimeoutWarning(false);
+    setAppState('login');
     socket.disconnect();
     socket.connect();
+  };
+
+  // Handle joining a room
+  const handleJoinRoom = async (roomId) => {
+    try {
+      // For now, we'll create a simple room object
+      // In a full implementation, you'd fetch room details from the API
+      setCurrentRoom({ 
+        id: roomId, 
+        name: 'Loading...', 
+        description: '' 
+      });
+      setAppState('room');
+      
+      // Connect socket and join room
+      if (!socket.connected) {
+        socket.connect();
+      }
+      socket.emit(SOCKET_EVENTS.JOIN_ROOM, { roomId });
+    } catch (error) {
+      console.error('Error joining room:', error);
+      alert('Failed to join room');
+    }
+  };
+
+  // Handle leaving a room (back to dashboard)
+  const handleLeaveRoom = () => {
+    setCurrentRoom(null);
+    setAppState('dashboard');
+    if (socket.connected) {
+      socket.disconnect();
+    }
   };
 
   // Extend session when user chooses to stay
@@ -365,14 +396,31 @@ function App() {
 
       {!currentUser ? (
         <LoginScreen onLogin={handleLogin} />
-      ) : (
+      ) : appState === 'dashboard' ? (
+        <RoomDashboard 
+          currentUser={currentUser} 
+          onJoinRoom={handleJoinRoom}
+          onLogout={handleLogout}
+        />
+      ) : appState === 'room' && currentRoom ? (
         <ChatRoom 
           socket={socket} 
           currentUser={currentUser} 
+          currentRoom={currentRoom}
           onLogout={handleLogout}
+          onLeaveRoom={handleLeaveRoom}
           isConnected={isConnected}
           onActivity={updateLastActivity}
         />
+      ) : (
+        <div className="d-flex justify-content-center align-items-center h-100">
+          <div className="text-center">
+            <div className="spinner-border text-primary mb-3" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading...</p>
+          </div>
+        </div>
       )}
     </div>
   );

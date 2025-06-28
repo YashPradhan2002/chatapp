@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { login } from '../config/apiUtils';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../config/constants';
+import { ERROR_MESSAGES } from '../config/constants';
 
 const LoginForm = ({ onLogin, onSwitchToRegister }) => {
   const [formData, setFormData] = useState({
@@ -45,9 +45,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
     <div className="card shadow-lg border-0">
       <div className="card-body p-5">
         <div className="text-center mb-4">
-          <i className="bi bi-person-circle text-primary display-3"></i>
-          <h2 className="h3 mb-3 fw-bold text-primary">Login to Uchat</h2>
-          <p className="text-muted">Enter your credentials to start chatting</p>
+          <h2 className="h3 mb-3 fw-bold text-primary">Welcome Back</h2>
         </div>
         
         {error && (
@@ -60,7 +58,6 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label htmlFor="identifier" className="form-label">
-              <i className="bi bi-person me-1"></i>
               Username or Email
             </label>
             <input
@@ -78,7 +75,6 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
           
           <div className="mb-4">
             <label htmlFor="password" className="form-label">
-              <i className="bi bi-lock me-1"></i>
               Password
             </label>
             <input
@@ -116,7 +112,6 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
         </form>
         
         <div className="text-center">
-          <p className="text-muted mb-2">Don't have an account?</p>
           <button 
             className="btn btn-outline-primary"
             onClick={onSwitchToRegister}
@@ -130,7 +125,7 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
         <hr className="my-4" />
         
         <div className="text-center">
-          <h6 className="text-muted mb-3">Demo Accounts</h6>
+          <h6 className="text-muted mb-3">Quick Demo</h6>
           <div className="row g-2">
             <div className="col-6">
               <button
@@ -139,7 +134,6 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
                 onClick={() => setFormData({ identifier: 'alice', password: 'password123' })}
                 disabled={loading}
               >
-                <i className="bi bi-person-fill me-1"></i>
                 Alice
               </button>
             </div>
@@ -150,14 +144,10 @@ const LoginForm = ({ onLogin, onSwitchToRegister }) => {
                 onClick={() => setFormData({ identifier: 'bob', password: 'password123' })}
                 disabled={loading}
               >
-                <i className="bi bi-person-fill me-1"></i>
                 Bob
               </button>
             </div>
           </div>
-          <small className="text-muted mt-2 d-block">
-            Click to auto-fill demo credentials
-          </small>
         </div>
       </div>
     </div>

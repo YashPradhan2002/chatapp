@@ -16,11 +16,10 @@ const LoginScreen = ({ onLogin }) => {
   return (
     <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="row w-100 justify-content-center">
-        <div className="col-md-8 col-lg-6 col-xl-5">
+        <div className="col-md-6 col-lg-5 col-xl-4">
           <div className="text-center mb-4">
-            <i className="bi bi-chat-dots-fill text-primary display-1"></i>
-            <h1 className="display-4 fw-bold text-white mb-2">Uchat</h1>
-            <p className="lead text-white-50">Real-time messaging made simple</p>
+            <i className="bi bi-chat-dots-fill text-white display-1 mb-3"></i>
+            <h1 className="display-4 fw-bold text-white mb-1">Uchat</h1>
           </div>
           
           {isLogin ? (
@@ -34,13 +33,6 @@ const LoginScreen = ({ onLogin }) => {
               onSwitchToLogin={() => setIsLogin(true)}
             />
           )}
-          
-          <div className="text-center mt-4">
-            <small className="text-white-50">
-              <i className="bi bi-shield-check me-1"></i>
-              Secure • Real-time • Modern
-            </small>
-          </div>
         </div>
       </div>
     </div>
