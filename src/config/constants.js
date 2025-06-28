@@ -16,8 +16,10 @@ export const SOCKET_EVENTS = {
   DISCONNECT: 'disconnect',
   
   // User events
-  JOIN: 'join',
-  JOINED: 'joined',
+  JOIN: 'join', // Legacy - kept for compatibility
+  JOINED: 'joined', // Legacy - kept for compatibility
+  JOIN_ROOM: 'joinRoom',
+  ROOM_JOINED: 'roomJoined',
   USER_JOINED: 'userJoined',
   USER_LEFT: 'userLeft',
   ONLINE_USERS: 'onlineUsers',
@@ -28,7 +30,13 @@ export const SOCKET_EVENTS = {
   
   // Typing events
   TYPING: 'typing',
-  USER_TYPING: 'userTyping'
+  USER_TYPING: 'userTyping',
+  
+  // Room events
+  ROOM_CREATED: 'roomCreated',
+  ROOM_UPDATED: 'roomUpdated',
+  ROOM_DELETED: 'roomDeleted',
+  INVITATION_RECEIVED: 'invitationReceived'
 };
 
 // User Activity Events

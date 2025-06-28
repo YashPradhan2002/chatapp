@@ -7,6 +7,10 @@ const messageSchema = new mongoose.Schema({
     trim: true,
     maxlength: 1000
   },
+  encryptedText: {
+    type: String,
+    required: true // Encrypted version of the message
+  },
   sender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -18,14 +22,24 @@ const messageSchema = new mongoose.Schema({
     color: String
   },
   room: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Room',
+    required: true
+  },
+  roomName: {
     type: String,
-    default: 'general'
+    required: true // Store room name for quick access
   },
   edited: {
     type: Boolean,
     default: false
   },
-  editedAt: Date
+  editedAt: Date,
+  messageType: {
+    type: String,
+    enum: ['text', 'system', 'invitation'],
+    default: 'text'
+  }
 }, {
   timestamps: true
 });

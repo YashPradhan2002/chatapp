@@ -8,7 +8,16 @@ const API_CONFIG = {
     LOGOUT: '/api/auth/logout',
     ME: '/api/auth/me',
     MESSAGES: '/api/messages',
-    HEALTH: '/api/health'
+    HEALTH: '/api/health',
+    
+    // Room endpoints
+    ROOMS: '/api/rooms',
+    CREATE_ROOM: '/api/rooms/create',
+    MY_ROOMS: '/api/rooms/my-rooms',
+    JOIN_ROOM: '/api/rooms/:roomId/join',
+    INVITE_USER: '/api/rooms/:roomId/invite',
+    ACCEPT_INVITE: '/api/rooms/accept-invite/:inviteCode',
+    ROOM_MESSAGES: '/api/rooms/:roomId/messages'
   },
   
   // Session Configuration
