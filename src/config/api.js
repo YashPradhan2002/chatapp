@@ -25,7 +25,7 @@ const API_CONFIG = {
   // Socket Configuration
   SOCKET_OPTIONS: {
     cors: {
-      origin: ["http://localhost:3000", "https://your-frontend-domain.com"],
+      origin: ["http://localhost:3000", "https://uchat-livid.vercel.app"],
       methods: ["GET", "POST"]
     }
   }

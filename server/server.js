@@ -15,10 +15,7 @@ const messageRoutes = require('./routes/messages');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
+  cors: CORS_OPTIONS
 });
 
 // Connect to MongoDB
@@ -44,8 +41,10 @@ const activeUsers = new Map();
 // Socket authentication middleware
 io.use(async (socket, next) => {
   try {
+    console.log('🔐 Socket authentication attempt from:', socket.handshake.address);
     const token = socket.handshake.auth.token;
     if (!token) {
+      console.log('❌ No token provided');
       return next(new Error('Authentication error'));
     }
 
@@ -53,23 +52,27 @@ io.use(async (socket, next) => {
     const user = await User.findById(decoded.userId).select('-password');
     
     if (!user) {
+      console.log('❌ User not found for token');
       return next(new Error('User not found'));
     }
 
     socket.userId = user._id.toString();
     socket.user = user;
+    console.log('✅ Socket authenticated for user:', user.name);
     next();
   } catch (error) {
+    console.log('❌ Socket authentication error:', error.message);
     next(new Error('Authentication error'));
   }
 });
 
 // Socket.IO connection handling
 io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
-  console.log('User connected:', socket.user.name, socket.id);
+  console.log('🔌 User connected:', socket.user.name, socket.id);
   
   // Join chat room
   socket.on(SOCKET_EVENTS.JOIN, async () => {
+    console.log('👥 User joining chat:', socket.user.name);
     try {
       // Update user online status
       await User.findByIdAndUpdate(socket.userId, {
@@ -114,6 +117,7 @@ io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
       
       // Send current online users
       const onlineUsers = Array.from(activeUsers.values()).map(conn => conn.user);
+      console.log('📋 Sending online users list:', onlineUsers.map(u => u.name));
       io.emit(SOCKET_EVENTS.ONLINE_USERS, onlineUsers);
     } catch (error) {
       console.error('Join error:', error);

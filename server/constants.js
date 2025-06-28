@@ -23,7 +23,7 @@ const SOCKET_EVENTS = {
 const MESSAGE_LIMIT = 100;
 
 const CORS_OPTIONS = {
-  origin: ["http://localhost:3000", "https://uchat-livid.vercel.app/"],
+  origin: ["http://localhost:3000", "https://uchat-livid.vercel.app"],
   methods: ["GET", "POST"],
   credentials: true
 };

@@ -6,7 +6,12 @@ import API_CONFIG, { getSocketUrl, getSessionTimeout, getMaxSessionDuration, get
 import { SOCKET_EVENTS, ACTIVITY_EVENTS, ERROR_MESSAGES, UI_CONSTANTS } from './config/constants';
 import './App.css';
 
-const socket = io(getSocketUrl());
+const socket = io(getSocketUrl(), {
+  transports: ['websocket', 'polling'],
+  upgrade: true,
+  timeout: 20000,
+  forceNew: true
+});
 
 // Session timeout durations from config
 const SESSION_TIMEOUT = getSessionTimeout(); // 5 minutes inactivity
@@ -33,16 +38,29 @@ function App() {
   // ...existing socket connection code...
   useEffect(() => {
     socket.on(SOCKET_EVENTS.CONNECT, () => {
+      console.log('✅ Connected to server');
       setIsConnected(true);
     });
 
     socket.on(SOCKET_EVENTS.DISCONNECT, () => {
+      console.log('❌ Disconnected from server');
       setIsConnected(false);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('❌ Connection error:', error);
+      setIsConnected(false);
+    });
+
+    socket.on('error', (error) => {
+      console.error('❌ Socket error:', error);
     });
 
     return () => {
       socket.off(SOCKET_EVENTS.CONNECT);
       socket.off(SOCKET_EVENTS.DISCONNECT);
+      socket.off('connect_error');
+      socket.off('error');
     };
   }, []);
 
@@ -92,8 +110,14 @@ function App() {
         
         // Update socket auth and join
         socket.auth = { token: savedToken };
-        socket.connect();
-        socket.emit(SOCKET_EVENTS.JOIN);
+        if (socket.connected) {
+          socket.emit(SOCKET_EVENTS.JOIN);
+        } else {
+          socket.connect();
+          socket.once(SOCKET_EVENTS.CONNECT, () => {
+            socket.emit(SOCKET_EVENTS.JOIN);
+          });
+        }
       }
     }
   };
@@ -262,8 +286,14 @@ function App() {
     
     // Update socket auth and join
     socket.auth = { token };
-    socket.connect();
-    socket.emit(SOCKET_EVENTS.JOIN);
+    if (socket.connected) {
+      socket.emit(SOCKET_EVENTS.JOIN);
+    } else {
+      socket.connect();
+      socket.once(SOCKET_EVENTS.CONNECT, () => {
+        socket.emit(SOCKET_EVENTS.JOIN);
+      });
+    }
   };
 
   // Handle logout
