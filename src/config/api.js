@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:5001',
+  BASE_URL: 'https://uchat-w1wy.onrender.com',
   ENDPOINTS: {
     PROFILES: '/api/profiles',
     LOGIN: '/api/auth/login',
@@ -25,7 +25,7 @@ const API_CONFIG = {
   // Socket Configuration
   SOCKET_OPTIONS: {
     cors: {
-      origin: "http://localhost:3000",
+      origin: ["http://localhost:3000", "https://your-frontend-domain.com"],
       methods: ["GET", "POST"]
     }
   }

@@ -23,8 +23,9 @@ const SOCKET_EVENTS = {
 const MESSAGE_LIMIT = 100;
 
 const CORS_OPTIONS = {
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST"]
+  origin: ["http://localhost:3000", "https://your-frontend-domain.com"],
+  methods: ["GET", "POST"],
+  credentials: true
 };
 
 module.exports = {
