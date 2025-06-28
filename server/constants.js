@@ -28,7 +28,7 @@ const SOCKET_EVENTS = {
   INVITATION_RECEIVED: 'invitationReceived'
 };
 
-const MESSAGE_LIMIT = 9999999999; // Set to a very high number to avoid hitting limits in practice
+const MESSAGE_LIMIT = 1000; // Set to a very high number to avoid hitting limits in practice
 
 const CORS_OPTIONS = {
   origin: ["http://localhost:3000", "https://uchat-livid.vercel.app"],

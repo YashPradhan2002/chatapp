@@ -1,11 +1,10 @@
 const crypto = require('crypto');
 
 // Encryption configuration
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = 'aes-256-cbc';
 const KEY_LENGTH = 32; // 256 bits
 const IV_LENGTH = 16; // 128 bits
 const SALT_LENGTH = 32; // 256 bits
-const TAG_LENGTH = 16; // 128 bits
 
 /**
  * Generate a random encryption key for a room
@@ -30,18 +29,15 @@ const encryptMessage = (text, roomKey) => {
     const iv = crypto.randomBytes(IV_LENGTH);
     const key = deriveKey(roomKey, salt);
     
-    const cipher = crypto.createCipherGCM(ALGORITHM, key, iv);
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
     
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     
-    const authTag = cipher.getAuthTag();
-    
-    // Combine salt, iv, authTag, and encrypted data
+    // Combine salt, iv, and encrypted data
     const combined = Buffer.concat([
       salt,
       iv,
-      authTag,
       Buffer.from(encrypted, 'hex')
     ]);
     
@@ -62,13 +58,11 @@ const decryptMessage = (encryptedData, roomKey) => {
     // Extract components
     const salt = combined.subarray(0, SALT_LENGTH);
     const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
-    const authTag = combined.subarray(SALT_LENGTH + IV_LENGTH, SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
-    const encrypted = combined.subarray(SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
+    const encrypted = combined.subarray(SALT_LENGTH + IV_LENGTH);
     
     const key = deriveKey(roomKey, salt);
     
-    const decipher = crypto.createDecipherGCM(ALGORITHM, key, iv);
-    decipher.setAuthTag(authTag);
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     
     let decrypted = decipher.update(encrypted, null, 'utf8');
     decrypted += decipher.final('utf8');
