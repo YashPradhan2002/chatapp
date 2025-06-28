@@ -25,7 +25,7 @@ router.post('/create', auth, async (req, res) => {
 
     // Check if user already has a room with this name
     const existingRoom = await Room.findOne({ 
-      creator: req.userId, 
+      creator: req.user._id, 
       name: name.trim(),
       isActive: true 
     });
@@ -44,11 +44,11 @@ router.post('/create', auth, async (req, res) => {
     const room = new Room({
       name: name.trim(),
       description: description?.trim() || '',
-      creator: req.userId,
+      creator: req.user._id,
       password: hashedPassword,
       encryptionKey,
       members: [{
-        user: req.userId,
+        user: req.user._id,
         role: 'admin',
         hasAccess: true // Creator automatically has access
       }]
@@ -81,8 +81,8 @@ router.get('/my-rooms', auth, async (req, res) => {
   try {
     const rooms = await Room.find({
       $or: [
-        { creator: req.userId },
-        { 'members.user': req.userId }
+        { creator: req.user._id },
+        { 'members.user': req.user._id }
       ],
       isActive: true
     })
@@ -91,7 +91,7 @@ router.get('/my-rooms', auth, async (req, res) => {
     .sort({ updatedAt: -1 });
 
     const formattedRooms = rooms.map(room => {
-      const userMembership = room.members.find(m => m.user._id.toString() === req.userId);
+      const userMembership = room.members.find(m => m.user._id.toString() === req.user._id.toString());
       return {
         id: room._id,
         name: room.name,
@@ -124,7 +124,7 @@ router.post('/:roomId/join', auth, async (req, res) => {
     }
 
     // Check if user is already a member
-    const existingMember = room.members.find(m => m.user.toString() === req.userId);
+    const existingMember = room.members.find(m => m.user.toString() === req.user._id.toString());
     
     if (existingMember) {
       if (existingMember.hasAccess) {
@@ -173,7 +173,7 @@ router.post('/:roomId/join', auth, async (req, res) => {
 
     // Add user to room
     room.members.push({
-      user: req.userId,
+      user: req.user._id,
       role: 'member',
       hasAccess: true
     });
@@ -207,7 +207,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     }
 
     // Check if user is a member and can invite
-    const userMembership = room.members.find(m => m.user.toString() === req.userId);
+    const userMembership = room.members.find(m => m.user.toString() === req.user._id.toString());
     if (!userMembership) {
       return res.status(403).json({ error: 'You are not a member of this room' });
     }
@@ -237,7 +237,7 @@ router.post('/:roomId/invite', auth, async (req, res) => {
     // Create invitation
     const inviteCode = generateInviteCode();
     room.invitations.push({
-      invitedBy: req.userId,
+      invitedBy: req.user._id,
       invitedUser: invitedUser._id,
       inviteCode,
       status: 'pending'
@@ -273,7 +273,7 @@ router.post('/accept-invite/:inviteCode', auth, async (req, res) => {
 
     const invitation = room.invitations.find(inv => 
       inv.inviteCode === inviteCode && 
-      inv.invitedUser.toString() === req.userId
+      inv.invitedUser.toString() === req.user._id.toString()
     );
 
     if (!invitation) {
@@ -294,7 +294,7 @@ router.post('/accept-invite/:inviteCode', auth, async (req, res) => {
 
     // Add user to room
     room.members.push({
-      user: req.userId,
+      user: req.user._id,
       role: 'member',
       hasAccess: false // Will need to enter password on first access
     });
@@ -331,7 +331,7 @@ router.get('/:roomId/messages', auth, async (req, res) => {
     }
 
     // Check if user has access to this room
-    const userMembership = room.members.find(m => m.user.toString() === req.userId);
+    const userMembership = room.members.find(m => m.user.toString() === req.user._id.toString());
     if (!userMembership || !userMembership.hasAccess) {
       return res.status(403).json({ error: 'Access denied to this room' });
     }
